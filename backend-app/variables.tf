@@ -35,7 +35,7 @@ variable "backend-alb_listener_arn" {
   type = string
 }
 
-variable "priority" {
+variable "rule_priority" {
   type = number
 }
 
