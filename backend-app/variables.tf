@@ -35,6 +35,10 @@ variable "backend-alb_listener_arn" {
   type = string
 }
 
+variable "priority" {
+  type = number
+}
+
 variable "project_name" {
   default = "roboshop"
 }
