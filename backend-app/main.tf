@@ -8,7 +8,7 @@ resource "aws_instance" "component" {
     var.ec2_tags,
     local.common_tags,
     {
-      Name = "${local.common_name_prefix}-${component}"
+      Name = "${local.common_name_prefix}-${var.component}"
     }
   )
 }
