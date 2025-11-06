@@ -6,19 +6,7 @@ variable "instance_type" {
   type = string
 }
 
-variable "db" {
-  type = string
-}
-
-variable "db_sg_id" {
-  type = string
-}
-
-variable "database_subnet_id" {
-  type = string
-}
-
-variable "ec2-user_pass" {
+variable "db-component" {
   type = string
 }
 
@@ -32,14 +20,6 @@ variable "environment" {
 
 variable "domain_name" {
   default = "sniggie.fun"
-}
-
-variable "zone_id" {
-  type = string
-}
-
-variable "db" {
-  type = string
 }
 
 variable "ec2_tags" {

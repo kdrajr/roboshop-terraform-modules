@@ -1,7 +1,3 @@
-variable "vpc_id" {
-  type = string
-}
-
 variable "ami_id" {
   type = string
 }
@@ -14,25 +10,20 @@ variable "component" {
   type = string
 }
 
-
-variable "component_sg_id" {
-  type = string
-}
-
-variable "private_subnet_id" {
-  type = string
-}
-
-variable "private_subnet_ids" {
-  type = list
-}
-
 variable "ec2-user_pass" {
   type = string
 }
 
-variable "backend-alb_listener_arn" {
-  type = string
+variable "asg_desired_capacity" {
+  type = number
+}
+
+variable "asg_max_size" {
+  type = number
+}
+
+variable "asg_min_size" {
+  type = number
 }
 
 variable "rule_priority" {

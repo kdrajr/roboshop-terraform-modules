@@ -7,24 +7,9 @@ variable "lb_type" {
   default = "application"
 }
 
-variable "lb_sg_id" {
-  type = string
-}
-
-variable "private_subnet_ids" {
-  type = list
-}
-
-variable "public_subnet_ids" {
-  type = list
-}
 
 variable "enable_deletion_protection" {
   default = true
-}
-
-variable "lb_name_suffix" {
-  type = string
 }
 
 variable "project_name" {
@@ -41,8 +26,4 @@ variable "lb_tags" {
 
 variable "domain_name" {
   default = "sniggie.fun"
-}
-
-variable "zone_id" {
-  type = string
 }

@@ -1,8 +1,8 @@
-resource "aws_instance" "component" {
+resource "aws_instance" "main" {
   ami = var.ami_id
   instance_type = var.instance_type
-  vpc_security_group_ids = [var.component_sg_id]
-  subnet_id = var.private_subnet_id
+  vpc_security_group_ids = [local.component_sg_id]
+  subnet_id = local.subnet_id
 
   tags = merge(
     var.ec2_tags,
@@ -14,14 +14,14 @@ resource "aws_instance" "component" {
 }
 
 
-resource "terraform_data" "component" {
-  triggers_replace =  [aws_instance.component.id]
+resource "terraform_data" "main" {
+  triggers_replace =  [aws_instance.main.id]
     
   connection {
     type     = "ssh"
     user     = "ec2-user"
     password = var.ec2-user_pass
-    host     = aws_instance.component.private_ip
+    host     = aws_instance.main.private_ip
   }
 
   provisioner "file" {
@@ -38,18 +38,22 @@ resource "terraform_data" "component" {
   }
 }
 
-resource "aws_ec2_instance_state" "component" {
-  instance_id = aws_instance.component.id
+resource "aws_ec2_instance_state" "main" {
+  instance_id = aws_instance.main.id
   state       = "stopped"
 
-  depends_on = [terraform_data.component]
+  depends_on = [terraform_data.main]
 }
 
-resource "aws_ami_from_instance" "component" {
+resource "aws_ami_from_instance" "main" {
   name               = "${local.common_name_prefix}-${var.component}-ami"
-  source_instance_id = aws_instance.component.id
+  source_instance_id = aws_instance.main.id
 
-  depends_on = [aws_ec2_instance_state.component]
+  depends_on = [aws_ec2_instance_state.main]
+
+  provisioner "local-exec" {
+      command = "aws ec2 terminate-instances --instance-ids ${aws_instance.main.id}"
+    }
 
   tags = merge(
     local.common_tags,
@@ -59,14 +63,14 @@ resource "aws_ami_from_instance" "component" {
   )
 }
 
-resource "aws_launch_template" "component" {
+resource "aws_launch_template" "main" {
   name = "${local.common_name_prefix}-${var.component}"
-  image_id = aws_ami_from_instance.component.id
+  image_id = aws_ami_from_instance.main.id
   instance_type = var.instance_type
   instance_initiated_shutdown_behavior = "terminate"
-  vpc_security_group_ids = [var.component_sg_id]
+  vpc_security_group_ids = [local.component_sg_id]
 
-
+### tags for launched instance with this template
   tag_specifications {
     resource_type = "instance"
 
@@ -79,6 +83,7 @@ resource "aws_launch_template" "component" {
   )
   }
 
+### tags for volume created with this template
   tag_specifications {
     resource_type = "volume"
 
@@ -91,6 +96,7 @@ resource "aws_launch_template" "component" {
   )
   }
 
+### tags for this template
   tags = merge(
       local.common_tags,
       {
@@ -101,17 +107,17 @@ resource "aws_launch_template" "component" {
 }
 
 
-resource "aws_lb_target_group" "component" {
+resource "aws_lb_target_group" "main" {
   name     = "${local.common_name_prefix}-${var.component}"
-  port     = 8080
+  port     = local.tg_port
   protocol = "HTTP"
-  vpc_id   = var.vpc_id
+  vpc_id   = local.vpc_id
   deregistration_delay = 60
 
   health_check {
-    path = "/health"
+    path = local.tg_health_check_path
     protocol = "HTTP"
-    port = 8080
+    port = local.tg_port
     matcher = "200-299"
     interval = 10
     timeout = 5
@@ -127,20 +133,20 @@ resource "aws_lb_target_group" "component" {
   )
 }
 
-resource "aws_autoscaling_group" "component" {
+resource "aws_autoscaling_group" "main" {
   name = "${local.common_name_prefix}-${var.component}"
-  desired_capacity   = 1
-  max_size           = 2
-  min_size           = 1
-  vpc_zone_identifier = var.private_subnet_ids
+  desired_capacity   = var.asg_desired_capacity
+  max_size           = var.asg_max_size
+  min_size           = var.asg_min_size
+  vpc_zone_identifier = local.vpc_zone_identifier
   health_check_type = "ELB"
-  health_check_grace_period = 60
-  target_group_arns = [aws_lb_target_group.component.arn]
+  health_check_grace_period = 100
+  target_group_arns = [aws_lb_target_group.main.arn]
   
 
   launch_template {
-    id      = aws_launch_template.component.id
-    version = aws_launch_template.component.latest_version
+    id      = aws_launch_template.main.id
+    version = aws_launch_template.main.latest_version
   }
 
   timeouts {
@@ -162,9 +168,9 @@ resource "aws_autoscaling_group" "component" {
   }
 }
 
-resource "aws_autoscaling_policy" "component" {
+resource "aws_autoscaling_policy" "main" {
   name = "${local.common_name_prefix}-${var.component}"
-  autoscaling_group_name = aws_autoscaling_group.component.name
+  autoscaling_group_name = aws_autoscaling_group.main.name
   policy_type = "TargetTrackingScaling"
 
   target_tracking_configuration {
@@ -179,18 +185,18 @@ resource "aws_autoscaling_policy" "component" {
 
 
 
-resource "aws_lb_listener_rule" "backend_component" {
-  listener_arn = var.backend-alb_listener_arn
+resource "aws_lb_listener_rule" "alb_component" {
+  listener_arn = local.lb_listener_arn
   priority = var.rule_priority
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.component.arn
+    target_group_arn = aws_lb_target_group.main.arn
   }
 
   condition {
     host_header {
-      values = ["${var.component}.backend-alb-${var.environment}.${var.domain_name}"]
+      values = [local.host_header_value]
     }
   }
 
@@ -200,14 +206,16 @@ resource "aws_lb_listener_rule" "backend_component" {
 }
 
 
-resource "terraform_data" "terminate_component_instance" {
-    triggers_replace = [aws_instance.component.id]
+
+
+/* resource "terraform_data" "terminate_component_instance" {
+    triggers_replace = [aws_instance.main.id]
 
     provisioner "local-exec" {
-      command = "aws ec2 terminate-instances --instance-ids ${aws_instance.component.id}"
+      command = "aws ec2 terminate-instances --instance-ids ${aws_instance.main.id}"
     }
-    depends_on = [aws_autoscaling_policy.component]
-}
+    depends_on = [aws_autoscaling_policy.main]
+} */
 
 
 
