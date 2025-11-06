@@ -11,6 +11,7 @@ locals {
   ec2-user_pass = data.aws_ssm_parameter.ec2-user_pass.value
   zone_id = data.aws_route53_zone.sniggie.zone_id
 
+  iam_instance_profile = var.component == "shipping" ? "Ec2SSMParameterRead" : null
   subnet_id = "${var.component}" == "frontend" ? local.public_subnet_id : local.private_subnet_id
   tg_port = "${var.component}" == "frontend" ? 80 : 8080
   tg_health_check_path = "${var.component}" == "frontend" ? "/" : "/health"
