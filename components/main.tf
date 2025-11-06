@@ -3,6 +3,7 @@ resource "aws_instance" "main" {
   instance_type = var.instance_type
   vpc_security_group_ids = [local.component_sg_id]
   subnet_id = local.subnet_id
+  iam_instance_profile = local.iam_instance_profile
 
   tags = merge(
     var.ec2_tags,
