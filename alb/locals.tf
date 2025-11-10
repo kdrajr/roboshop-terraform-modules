@@ -10,9 +10,9 @@ locals {
   lb_sg_id = var.is_it_internal == true ? local.backend-alb_sg_id : local.frontend-alb_sg_id
   subnets = var.is_it_internal == true ? local.private_subnet_ids : local.public_subnet_ids
   lb_name_suffix = var.is_it_internal == true ? "backend-alb" : "frontend-alb"
-  #listener_port = var.is_it_internal == true ? 80 : 443
-  #listener_protocol = var.is_it_internal == true ? "HTTP" : "HTTPS"
-  dns_record_name = var.is_it_internal == true ? "*.backend-alb-${var.environment}.${var.domain_name}" : "${var.environment}.${var.domain_name}"
+  listener_port = var.is_it_internal == true ? 80 : 443
+  listener_protocol = var.is_it_internal == true ? "HTTP" : "HTTPS"
+  dns_record_name = var.is_it_internal == true ? "*.backend-alb-${var.environment}.${var.domain_name}" : "roboshop-${var.environment}.${var.domain_name}"
 
 
   common_tags = {

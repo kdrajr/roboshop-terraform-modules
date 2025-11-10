@@ -20,8 +20,8 @@ resource "aws_lb" "main" {
 
 resource "aws_lb_listener" "main" {
   load_balancer_arn = aws_lb.main.arn
-  port              = "80"
-  protocol          = "HTTP"
+  port              = local.listener_port
+  protocol          = local.listener_protocol
 
   default_action {
     type = "fixed-response"
