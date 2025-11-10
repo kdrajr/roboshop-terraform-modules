@@ -29,8 +29,8 @@ resource "aws_lb_listener" "main" {
     type = "fixed-response"
 
     fixed_response {
-      content_type = "text/plain"
-      message_body = "Hello, I am from ${local.common_name_prefix}-${local.lb_name_suffix}"
+      content_type = "text/html"
+      message_body = "<h1>Hello, I am from ${local.common_name_prefix}-${local.lb_name_suffix}</h1>"
       status_code  = "200"
     }
   }
