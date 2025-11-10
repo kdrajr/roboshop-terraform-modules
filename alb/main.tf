@@ -22,6 +22,8 @@ resource "aws_lb_listener" "main" {
   load_balancer_arn = aws_lb.main.arn
   port              = local.listener_port
   protocol          = local.listener_protocol
+  ssl_policy = local.listener_ssl_policy
+  certificate_arn = local.listener_cert_arn
 
   default_action {
     type = "fixed-response"

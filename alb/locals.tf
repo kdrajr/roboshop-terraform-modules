@@ -12,6 +12,8 @@ locals {
   lb_name_suffix = var.is_it_internal == true ? "backend-alb" : "frontend-alb"
   listener_port = var.is_it_internal == true ? 80 : 443
   listener_protocol = var.is_it_internal == true ? "HTTP" : "HTTPS"
+  listener_ssl_policy = var.is_it_internal == true ? null : "ELBSecurityPolicy-TLS13-1-3-2021-06"
+  listener_cert_arn = var.is_it_internal == true ? null : data.aws_ssm_parameter.frontend-alb_cert_arn.value
   dns_record_name = var.is_it_internal == true ? "*.backend-alb-${var.environment}.${var.domain_name}" : "roboshop-${var.environment}.${var.domain_name}"
 
 

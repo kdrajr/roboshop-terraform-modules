@@ -21,3 +21,7 @@ data "aws_ssm_parameter" "public_subnet_ids" {
 data "aws_route53_zone" "sniggie" {
       name = var.domain_name 
 }
+
+data "aws_ssm_parameter" "frontend-alb_cert_arn" {
+  name = "/${var.project_name}/${var.environment}/frontend-alb_cert_arn"
+}
