@@ -70,6 +70,7 @@ resource "aws_launch_template" "main" {
   instance_type = var.instance_type
   instance_initiated_shutdown_behavior = "terminate"
   vpc_security_group_ids = [local.component_sg_id]
+  update_default_version = true
 
 ### tags for launched instance with this template
   tag_specifications {
@@ -153,6 +154,16 @@ resource "aws_autoscaling_group" "main" {
   timeouts {
     delete = "15m"
   }
+
+  instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 50
+    }
+    triggers = ["launch_template"]
+  }
+
+  
 
   dynamic "tag" {
     for_each = merge(

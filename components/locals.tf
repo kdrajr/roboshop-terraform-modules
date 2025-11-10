@@ -17,7 +17,7 @@ locals {
   tg_health_check_path = "${var.component}" == "frontend" ? "/" : "/health"
   vpc_zone_identifier = "${var.component}" == "frontend" ? local.public_subnet_ids : local.private_subnet_ids
   lb_listener_arn = "${var.component}" == "frontend" ? local.frontend-alb_listener_arn : local.backend-alb_listener_arn
-  host_header_value = "${var.component}" == "frontend" ? "${var.environment}.${var.domain_name}" : "${var.component}.backend-alb-${var.environment}.${var.domain_name}"
+  host_header_value = "${var.component}" == "frontend" ? "roboshop-${var.environment}.${var.domain_name}" : "${var.component}.backend-alb-${var.environment}.${var.domain_name}"
   
   common_name_prefix = "${var.project_name}-${var.environment}"
   common_tags = {
