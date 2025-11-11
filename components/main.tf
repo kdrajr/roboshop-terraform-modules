@@ -52,9 +52,9 @@ resource "aws_ami_from_instance" "main" {
 
   depends_on = [aws_ec2_instance_state.main]
 
-  /* provisioner "local-exec" {
+  provisioner "local-exec" {
       command = "aws ec2 terminate-instances --instance-ids ${aws_instance.main.id}"
-    } */
+    }
 
   tags = merge(
     local.common_tags,
@@ -62,14 +62,6 @@ resource "aws_ami_from_instance" "main" {
       Name = "${local.common_name_prefix}-${var.component}-ami"
     }
   )
-}
-
-
-resource "aws_ec2_instance_state" "this" {
-  instance_id = aws_instance.main.id
-  state       = "running"
-
-  depends_on = [aws_ami_from_instance.main]
 }
 
 resource "aws_launch_template" "main" {
