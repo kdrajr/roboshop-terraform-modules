@@ -2,7 +2,7 @@ resource "aws_instance" "main" {
   ami = var.ami_id
   instance_type = var.instance_type
   vpc_security_group_ids = [local.component_sg_id]
-  subnet_id = local.subnet_id
+  subnet_id = local.private_subnet_id
   iam_instance_profile = local.iam_instance_profile
 
   tags = merge(
@@ -52,9 +52,9 @@ resource "aws_ami_from_instance" "main" {
 
   depends_on = [aws_ec2_instance_state.main]
 
-  provisioner "local-exec" {
+  /* provisioner "local-exec" {
       command = "aws ec2 terminate-instances --instance-ids ${aws_instance.main.id}"
-    }
+    } */
 
   tags = merge(
     local.common_tags,
@@ -62,6 +62,14 @@ resource "aws_ami_from_instance" "main" {
       Name = "${local.common_name_prefix}-${var.component}-ami"
     }
   )
+}
+
+
+resource "aws_ec2_instance_state" "main" {
+  instance_id = aws_instance.main.id
+  state       = "running"
+
+  depends_on = [aws_ami_from_instance.main]
 }
 
 resource "aws_launch_template" "main" {
@@ -140,7 +148,8 @@ resource "aws_autoscaling_group" "main" {
   desired_capacity   = var.asg_desired_capacity
   max_size           = var.asg_max_size
   min_size           = var.asg_min_size
-  vpc_zone_identifier = local.vpc_zone_identifier
+  vpc_zone_identifier = local.private_subnet_ids
+  force_delete = false
   health_check_type = "ELB"
   health_check_grace_period = 100
   target_group_arns = [aws_lb_target_group.main.arn]
